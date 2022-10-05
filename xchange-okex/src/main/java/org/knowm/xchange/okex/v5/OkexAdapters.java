@@ -194,6 +194,29 @@ public class OkexAdapters {
     return new Trades(trades);
   }
 
+  public static List<Ticker> adaptTickers(List<OkexTicker> okexTickers) {
+    return okexTickers.stream()
+            .map(OkexAdapters::adaptTicker)
+            .collect(Collectors.toList());
+  }
+
+  public static Ticker adaptTicker(OkexTicker okexTicker) {
+    return new Ticker.Builder()
+            .instrument(adaptCurrencyPair(okexTicker.getInstrumentId()))
+            .open(new BigDecimal(okexTicker.getOpen24h()))
+            .last(new BigDecimal(okexTicker.getLast()))
+            .bid(new BigDecimal(okexTicker.getBidPx()))
+            .ask(new BigDecimal(okexTicker.getAskPx()))
+            .high(new BigDecimal(okexTicker.getHigh24h()))
+            .low(new BigDecimal(okexTicker.getLow24h()))
+            .volume(new BigDecimal(okexTicker.getVolCcy24h()))
+            .quoteVolume(new BigDecimal(okexTicker.getVol24h()))
+            .timestamp(okexTicker.getTs())
+            .bidSize(new BigDecimal(okexTicker.getBidSz()))
+            .askSize(new BigDecimal(okexTicker.getAskSz()))
+            .build();
+  }
+
   public static Order.OrderType adaptOkexOrderSideToOrderType(String okexOrderSide) {
 
     return okexOrderSide.equals("buy") ? Order.OrderType.BID : Order.OrderType.ASK;
@@ -205,6 +228,10 @@ public class OkexAdapters {
 
   public static CurrencyPair adaptCurrencyPair(OkexInstrument instrument) {
     return new CurrencyPair(instrument.getBaseCurrency(), instrument.getQuoteCurrency());
+  }
+
+  public static CurrencyPair adaptCurrencyPair(String instrumentId) {
+    return new CurrencyPair(instrumentId);
   }
 
   private static int numberOfDecimals(BigDecimal value) {
@@ -254,7 +281,7 @@ public class OkexAdapters {
               priceScale,
               null,
               staticMetaData != null ? staticMetaData.getFeeTiers() : null,
-              null,
+              new BigDecimal(instrument.getLotSize()),
               pair.counter,
               true));
     }
